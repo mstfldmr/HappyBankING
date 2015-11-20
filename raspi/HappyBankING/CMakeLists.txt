@@ -14,5 +14,6 @@ add_executable(HappyBankING ${SOURCE_FILES})
 find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${LIBCURL_CFLAGS})
 
-target_link_libraries(HappyBankING ${OpenCV_LIBS})
+target_link_libraries(HappyBankING ${OpenCV_LIBS} curl)

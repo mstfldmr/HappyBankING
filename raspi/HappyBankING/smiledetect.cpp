@@ -11,6 +11,8 @@
 #include <iterator>
 #include <stdio.h>
 
+#include <curl/curl.h>
+
 using namespace std;
 using namespace cv;
 
@@ -37,6 +39,78 @@ string cascadeName = "../../data/haarcascades/haarcascade_frontalface_alt.xml";
 string nestedCascadeName = "../../data/haarcascades/haarcascade_smile.xml";
 
 
+/*
+size_t write_to_string(void *ptr, size_t size, size_t count, void *stream) {
+    ((string*)stream)->append((char*)ptr, 0, size*count);
+    return size*count;
+}
+*/
+
+size_t write_to_string(void *ptr, size_t size, size_t nmemb, std::string stream)
+{
+    size_t realsize = size * nmemb;
+    std::string temp(static_cast<const char*>(ptr), realsize);
+    stream.append(temp);
+    return realsize;
+}
+
+
+
+int send_post(int personId, int locationId, int happiness){
+
+    CURL *curl;
+    CURLcode res;
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    /* In windows, this will init the winsock stuff */
+    curl_global_init(CURL_GLOBAL_ALL);
+
+    /* get a curl handle */
+    curl = curl_easy_init();
+    if(curl) {
+        /* First set the URL that is about to receive our POST. This URL can
+           just as well be a https:// URL if that is what should receive the
+           data. */
+        curl_easy_setopt(curl, CURLOPT_URL, "http://happybankingapi.azurewebsites.net/api/happybanking/person/updatePersons");
+        /* Now specify the POST data */
+        // curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "[{\"PersonId\":\"1\" ,\"LocationId\":\"53\", \"Happiness\":\"3\"}]");
+
+        //string data =  "[{\"PersonId\":\"1\" ,\"LocationId\":\"53\", \"Happiness\":\"3\"}]";
+        std::ostringstream stringStream;
+        stringStream << "[{\"PersonId\":\"" << 1 << "\" ,\"LocationId\":\"" << 53 << "\", \"Happiness\":\"" << 3 << "\"}]";
+        string data = stringStream.str();
+
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+
+
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers );
+
+
+
+
+        string response;
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_string);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+
+
+        /* Perform the request, res will get the return code */
+        res = curl_easy_perform(curl);
+        /* Check for errors */
+        if(res != CURLE_OK) {
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        }
+        cout << "res: " << res << "\n";
+        cout << "mmm: " << response << "\n";
+
+        /* always cleanup */
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    return 0;
+
+}
 int main( int argc, const char** argv )
 {
     CvCapture* capture = 0;
@@ -133,6 +207,7 @@ int main( int argc, const char** argv )
                 flip( frame, frameCopy, 0 );
 
             detectAndDraw( frameCopy, cascade, nestedCascade, scale, tryflip );
+            //send_post(1, 25, 3);
 
             if( waitKey( 10 ) >= 0 )
                 goto _cleanup_;
