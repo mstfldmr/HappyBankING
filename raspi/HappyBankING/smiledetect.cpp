@@ -185,6 +185,7 @@ int main( int argc, const char** argv )
     else if( inputName.size() )
     {
         capture = cvCaptureFromAVI( inputName.c_str() );
+        //capture = cvCaptureFromFile( inputName.c_str() );
         if(!capture) cout << "Capture from AVI didn't work" << endl;
     }
 
@@ -192,7 +193,7 @@ int main( int argc, const char** argv )
 
     if( capture )
     {
-        cout << "In capture ..." << endl;
+        cout << "In capture ..."   << endl;
         cout << endl << "NOTE: Smile intensity will only be valid after a first smile has been detected" << endl;
 
         for(;;)
@@ -206,10 +207,11 @@ int main( int argc, const char** argv )
             else
                 flip( frame, frameCopy, 0 );
 
+
             detectAndDraw( frameCopy, cascade, nestedCascade, scale, tryflip );
             //send_post(1, 25, 3);
 
-            if( waitKey( 10 ) >= 0 )
+            if( waitKey( 100  ) >= 0 )
                 goto _cleanup_;
         }
 
@@ -270,6 +272,8 @@ void detectAndDraw( Mat& img, CascadeClassifier& cascade,
         {
             faces.push_back(Rect(smallImg.cols - r->x - r->width, r->y, r->width, r->height));
         }
+
+        cout << faces.size() << "\n";
     }
 
     for( vector<Rect>::iterator r = faces.begin(); r != faces.end(); r++, i++ )
@@ -286,7 +290,7 @@ void detectAndDraw( Mat& img, CascadeClassifier& cascade,
             center.x = cvRound((r->x + r->width*0.5)*scale);
             center.y = cvRound((r->y + r->height*0.5)*scale);
             radius = cvRound((r->width + r->height)*0.25*scale);
-            circle( img, center, radius, color, 3, 8, 0 );
+            //circle( img, center, radius, color, 3, 8, 0 );
         }
         else
             rectangle( img, cvPoint(cvRound(r->x*scale), cvRound(r->y*scale)),
@@ -320,6 +324,41 @@ void detectAndDraw( Mat& img, CascadeClassifier& cascade,
         int rect_height = cvRound((float)img.rows * intensityZeroOne);
         CvScalar col = CV_RGB((float)255 * intensityZeroOne, 0, 0);
         rectangle(img, cvPoint(0, img.rows), cvPoint(img.cols/10, img.rows - rect_height), col, -1);
+
+
+        int happiness;
+        char happinessText[100];
+        if(intensityZeroOne > 0.7){
+            //happiness = 3;
+            //happinessText = "happy";
+            sprintf(happinessText, "happy %d", 100);
+            sprintf(happinessText, "happy");
+            circle( img, center, radius, CV_RGB(255,0,0), 3, 8, 0 );
+
+        } else if(intensityZeroOne > 0.4  ) {
+            happiness = 2;
+            //happinessText = "neutral";
+            sprintf(happinessText, "neutral %d", 100);
+            sprintf(happinessText, "neutral ");
+
+            circle( img, center, radius, CV_RGB(0,0,255   ), 3, 8, 0 );
+
+        } else{
+            happiness = 1;
+            //happinessText = "sad";
+            sprintf(happinessText, "sad %d", 100);
+            sprintf(happinessText, "sad");
+
+            circle( img, center, radius, CV_RGB(0,0,0), 3, 8, 0 );
+
+        }
+        const char * printText = happinessText ;
+
+        // putText(img, printText, center , FONT_HERSHEY_SCRIPT_SIMPLEX, 2, Scalar::all(255), 3, 8);
+
+
+        cout << "# faces: " << faces.size() << " - happiness: " << happiness << endl;
+        //send_post(1, 12, happiness);
     }
 
     cv::imshow( "result", img );

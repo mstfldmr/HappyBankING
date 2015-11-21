@@ -8,6 +8,7 @@ set(OpenCV_INCLUDE_DIRS "/usr/local/opt/opencv3/include")
 set(OpenCV_LIBS "/usr/local/opt/opencv3/lib")
 
 set(SOURCE_FILES smiledetect.cpp)
+# set(SOURCE_FILES mouthdetect.cpp)
 
 add_executable(HappyBankING ${SOURCE_FILES})
 
